@@ -1,7 +1,7 @@
-FROM mcr.microsoft.com/devcontainers/python:3.12-bookworm
+FROM mcr.microsoft.com/devcontainers/python:3.14-trixie
 
 RUN apt-get update \
- && apt-get install -y --no-install-recommends git usbutils \
+ && apt-get install -y --no-install-recommends git usbutils just \
  && rm -rf /var/lib/apt/lists/*
 
 # Add the '99-platformio-udev.rules' file to suppress the warning during upload. This file isn't necessary because the
