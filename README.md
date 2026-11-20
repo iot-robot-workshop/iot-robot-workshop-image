@@ -1,93 +1,163 @@
-# IoT-Robot-Workshop-Image
+# IoT-Robot Workshop Dev Container Image
 
-
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
-
+Builds and publishes the Docker image used by the IoT-Robot workshop dev container
+(VS Code + PlatformIO + ESP-IDF). The image contains PlatformIO Core, the ESP32
+platform, the ESP-IDF framework and the toolchain, so students do not have to
+download several GB on their first build.
+ 
+This repo is for the workshop maintainer only. Students use the separate
+**student template repo**, which references the image published from here.
+ 
+## How the two repos fit together
+ 
 ```
-cd existing_repo
-git remote add origin https://gitlab.hevs.ch/promotion/webtank/iot-robot-workshop-image.git
-git branch -M main
-git push -uf origin main
+this repo (image)                    student template repo
+-----------------                    ---------------------
+image/Dockerfile        --build-->   .devcontainer/devcontainer.json
+image/prebake/                        references ghcr.io/<owner>/<image-name>:<tag>
+.github/workflows/image.yml          platformio.ini, src/, scripts/attach.ps1
+        |
+        v
+ghcr.io/<owner>/<image-name>:<tag>
 ```
+ 
+The only coupling between the repos is the toolchain configuration (see
+[Keeping the repos in sync](#keeping-the-repos-in-sync)).
+ 
+## Repository layout
+ 
+```
+.
+├── image/
+│   ├── Dockerfile                # image definition
+│   └── prebake/                  # throwaway project used only at image build time
+│       ├── platformio.ini
+│       └── src/main.c
+├── .github/workflows/image.yml   # builds and pushes the image to GHCR
+└── README.md
+```
+ 
+### What is baked into the image
+ 
+- Python 3.12 (Debian bookworm, from the Dev Containers base image), git, usbutils
+- PlatformIO Core in `~/.platformio/penv`, where the VS Code PlatformIO extension looks for it
+- The platform, framework and toolchain downloaded by building `image/prebake`
+  (ESP32 platform, ESP-IDF, CMake, Ninja, esptool, compiler toolchain)
+- Filesystem tools that PlatformIO otherwise fetches at the first upload:
+  `tool-mkspiffs`, `tool-mklittlefs`, `tool-mkfatfs`
+- PlatformIO udev rules file (only silences a warning; serial permissions are
+  handled by the template's `serial-perms.sh`)
 
-## Integrate with your tools
-
-* [Set up project integrations](https://gitlab.hevs.ch/promotion/webtank/iot-robot-workshop-image/-/settings/integrations)
-
-## Collaborate with your team
-
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### What the prebake project is
+ 
+`image/prebake/` is not a student project. It is a minimal project that the
+Dockerfile builds once with `pio run` so PlatformIO downloads everything into the
+image. It is deleted at the end of the build and never appears in the
+students' workspace.
+ 
+## Configuration
+ 
+Decide on the image name once and use it everywhere:
+ 
+| Where | What to set |
+|---|---|
+| `.github/workflows/image.yml` | the two `tags:` lines: `ghcr.io/<owner>/<image-name>:<tag>` and `:latest` (owner must be lowercase) |
+| Template repo `devcontainer.json` | `"image": "ghcr.io/<owner>/<image-name>:<tag>"` |
+| `image/prebake/platformio.ini` | `platform`, `board`, `framework` (see below) |
+| `Dockerfile`, optional | `PIO_SPEC` build arg to pin PlatformIO Core, e.g. `platformio==<version>` |
+ 
+## Keeping the repos in sync
+ 
+The `platform`, `board` and `framework` lines in `image/prebake/platformio.ini`
+must be identical to those in the student template's root `platformio.ini`, with
+the platform version pinned, for example:
+ 
+```ini
+platform = espressif32@~8.0.0
+board = esp32dev
+framework = espidf
+```
+ 
+If they differ, the baked packages are not used and PlatformIO downloads what it
+needs at the first build. It still works, but slowly.
+ 
+## Build and test locally
+ 
+From the repo root, with Docker running:
+ 
+```bash
+docker build -t <image-name>:dev image
+```
+ 
+The first build takes a while because it downloads the full ESP-IDF toolchain.
+Check the result:
+ 
+```bash
+docker run --rm -it <image-name>:dev bash -c "pio --version && ls ~/.platformio/packages"
+```
+ 
+You should see the toolchain, `framework-espidf`, CMake and Ninja. To test with a
+board, set `"image": "<image-name>:dev"` in a checkout of the template repo,
+run `scripts/attach.ps1` on Windows, and use **Dev Containers: Reopen in Container**.
+On an ARM machine add `--platform linux/amd64`, since student PCs are x86.
+ 
+## Publish
+ 
+**Via GitHub Actions (default).** Pushing to `main` with changes under `image/`
+(or to the workflow file) builds and pushes the image. You can also start it from
+the Actions tab (`workflow_dispatch`).
+ 
+After the first successful run, set the package to **Public**
+(Package settings, then Change visibility), otherwise students cannot pull it
+without logging in. For an organization, public packages may first have to be
+allowed in the org settings.
+ 
+**Manually.**
+ 
+```bash
+echo <TOKEN> | docker login ghcr.io -u <github-user> --password-stdin
+docker tag <image-name>:dev ghcr.io/<owner>/<image-name>:<tag>
+docker push ghcr.io/<owner>/<image-name>:<tag>
+```
+ 
+The token is a personal access token with the `write:packages` scope.
+ 
+## Updating the image
+ 
+1. Edit the files in `image/` (new platform pin, extra baked tools or libraries, ...).
+2. Build and test locally (see above).
+3. Bump the image tag (for example `1` to `2`) in `image.yml`, push, and wait for a green run.
+4. In the template repo:
+   - update the pinned platform in `platformio.ini` if it changed,
+   - set the new tag in `devcontainer.json`,
+   - bump the volume name `pio-core-v1` to `pio-core-v2`. The volume is seeded from the
+     image only when it is first created, so without a new name students keep the old toolchain.
+5. Test on one clean machine, with a fresh clone, before the next workshop.
+### Baking additional packages
+ 
+If PlatformIO prints `Tool Manager: Installing ...` during a student's first build
+or upload, that package was not baked. Add it to the Dockerfile with the same
+name and version spec, for example:
+ 
+```dockerfile
+&& pio pkg install -g -t "platformio/<tool-name>@<version-spec>"
+```
+ 
+Global libraries use `pio pkg install -g -l "<library>"`. ESP-IDF components belong
+in the student project (`components/` or `idf_component.yml`), not in the image.
+ 
+## Troubleshooting
+ 
+| Symptom | Likely cause |
+|---|---|
+| `COPY prebake ... not found` during build | `prebake/` is not next to the Dockerfile, or the build context is wrong. Build with `docker build -t <name> image`. |
+| `unauthorized` when pulling from GHCR | Image or tag does not exist under that name, package is still private, or a stale `docker login`. Try `docker logout ghcr.io`. |
+| Students' first build downloads a lot | Platform, board or framework in the template differ from `prebake`, or the pin differs. |
+| `KeyError: 'version'` from `espidf.py` | Generic symptom of a failed CMake configure. Delete `.pio` and run `pio run -v`; read the `CMake Error` lines before the traceback. |
+| Port not visible in the container | The board is not attached on the Windows side (`attach.ps1`), or the cable has no data lines. |
+ 
+## Requirements for students (documented in the template repo)
+ 
+Docker Desktop with the WSL2 backend, VS Code with the Dev Containers and WSL
+extensions, and `usbipd-win` (`winget install usbipd`).
+ 
