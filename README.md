@@ -86,18 +86,18 @@ needs at the first build. It still works, but slowly.
 From the repo root, with Docker running:
  
 ```bash
-docker build -t <image-name>:dev image
+docker build -t iot-robot-workshop-image:dev image
 ```
  
 The first build takes a while because it downloads the full ESP-IDF toolchain.
 Check the result:
  
 ```bash
-docker run --rm -it <image-name>:dev bash -c "pio --version && ls ~/.platformio/packages"
+docker run --rm -it iot-robot-workshop-image:dev bash -c "pio --version && ls ~/.platformio/packages"
 ```
  
 You should see the toolchain, `framework-espidf`, CMake and Ninja. To test with a
-board, set `"image": "<image-name>:dev"` in a checkout of the template repo,
+board, set `"image": "iot-robot-workshop-image:dev"` in a checkout of the template repo,
 run `scripts/attach.ps1` on Windows, and use **Dev Containers: Reopen in Container**.
 On an ARM machine add `--platform linux/amd64`, since student PCs are x86.
  
@@ -116,8 +116,8 @@ allowed in the org settings.
  
 ```bash
 echo <TOKEN> | docker login ghcr.io -u <github-user> --password-stdin
-docker tag <image-name>:dev ghcr.io/<owner>/<image-name>:<tag>
-docker push ghcr.io/<owner>/<image-name>:<tag>
+docker tag iot-robot-workshop-image:dev ghcr.io/iot-robot-workshop/iot-robot-workshop-image:<tag>
+docker push ghcr.io/iot-robot-workshop/iot-robot-workshop-image:<tag>
 ```
  
 The token is a personal access token with the `write:packages` scope.
