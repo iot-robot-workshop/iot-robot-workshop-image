@@ -155,6 +155,17 @@ in the student project (`components/` or `idf_component.yml`), not in the image.
 | Students' first build downloads a lot | Platform, board or framework in the template differ from `prebake`, or the pin differs. |
 | `KeyError: 'version'` from `espidf.py` | Generic symptom of a failed CMake configure. Delete `.pio` and run `pio run -v`; read the `CMake Error` lines before the traceback. |
 | Port not visible in the container | The board is not attached on the Windows side (`attach.ps1`), or the cable has no data lines. |
+
+## TH2: Docker fails to start Container
+```
+docker: Error response from daemon: accessing specified distro mount service: stat /run/guest-services/distro-services/ubuntu.sock: no such file or directory
+```
+
+The problem is \\wsl.localhost\Ubuntu\mnt\wslg\runtime-dir\wayland-0 bind mount, which the Dev Containers extension adds automatically so Linux GUI apps can display through WSLg. To mount a path from the Ubuntu distro, Docker Desktop needs its **WSL integration for Ubuntu** to be active, and right now it isn’t. Your image, the /dev mount and the volume are not the problem. Since the container ran for you before, something has probably changed. Docker Desktop may have restarted or updated, wsl --shutdown may have stopped the distro, or the integration setting got reset.
+
+1. Check that the distro exists and starts. In PowerShell run `wsl -l -v`. If Ubuntu is stopped, start it with wsl -d Ubuntu and leave that window open.
+2. In Docker Desktop, go to Settings, then Resources, then WSL integration. Make sure integration is enabled for Ubuntu (and **`Enable integration with my default WSL distro`** is on) - then click Apply & restart.
+3. Retry Dev Containers: Reopen in Container.
  
 ## Requirements for students (documented in the template repo)
  
